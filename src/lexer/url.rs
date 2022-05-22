@@ -1,4 +1,4 @@
-use logos::{Lexer, Logos, Source};
+use logos::{Lexer, Logos};
 use std::{fmt::{Display, Formatter}};
 use regex::Regex;
 /// Tuple struct for link URLs
