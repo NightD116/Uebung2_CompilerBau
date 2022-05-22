@@ -1,6 +1,6 @@
 use logos::{Lexer, Logos, Source};
-use std::fmt::{Display, Formatter};
-
+use std::{fmt::{Display, Formatter}};
+use regex::Regex;
 /// Tuple struct for link URLs
 #[derive(Debug, PartialEq)]
 pub struct LinkUrl(String);
@@ -26,19 +26,26 @@ impl Display for LinkText {
 /// Token enum for capturing of link URLs and Texts
 #[derive(Logos, Debug, PartialEq)]
 pub enum URLToken {
-    // TODO: Capture link definitions
+    // <a[^>]*href=\"[^\"]*\"[^>]*>[^<]*</a[ \r\t\n]*>
+    #[regex("<a[^>]*href=[^>]*>[^<]*</a[\\s\n]*>", extract_link_info)]
     Link((LinkUrl, LinkText)),
 
-    // TODO: Ignore all characters that do not belong to a link definition
+    #[regex("<[^>]*>", logos::skip)]
+    #[regex("[^<]*", logos::skip)]
     Ignored,
 
     // Catch any error
     #[error]
+    #[regex(r" \n\r\t\f", logos::skip)]
     Error,
 }
 
 /// Extracts the URL and text from a string that matched a Link token
 fn extract_link_info(lex: &mut Lexer<URLToken>) -> (LinkUrl, LinkText) {
-    // TODO: Implement extraction from link definition
-    todo!()
+    let slice = lex.slice();
+    let regex = Regex::new("(?:href=\")([^\"]*)(?:\")(?:[^>]*>)([^<]*)(?:<)").unwrap();
+    let capture = regex.captures(slice).unwrap();
+    let url = capture.get(1).unwrap().as_str();
+    let text = capture.get(2).unwrap().as_str();
+    (LinkUrl(url.to_string()),LinkText(text.to_string()))
 }
